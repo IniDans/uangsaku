@@ -1,0 +1,10 @@
+# Hasil kompilasi
+out/
+
+# Data runtime milik pengguna (seed di data/seed/ tetap di-commit)
+data/*.csv
+data/config.properties
+
+# File editor
+.vscode/
+*.class
