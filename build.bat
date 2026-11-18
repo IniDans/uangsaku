@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-call jdk.bat
+call "%~dp0jdk.bat"
 if errorlevel 1 exit /b 1
 
 if exist out\main rmdir /s /q out\main

@@ -3,6 +3,7 @@ package repository;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -37,6 +38,8 @@ public class FileRepository {
     public static final String FILE_TRANSAKSI = "transaksi.csv";
     public static final String FILE_TEMPAT_HIBURAN = "tempat_hiburan.csv";
     public static final String FILE_PERINGATAN = "peringatan.csv";
+
+    private static final int MAKS_PERCOBAAN_TULIS = 5;
     public static final String FILE_KOTA = "kota.csv";
 
     private static final List<String> SEMUA_FILE = List.of(FILE_MAHASISWA, FILE_DOMPET, FILE_KIRIMAN,
@@ -307,10 +310,32 @@ public class FileRepository {
         Path target = folderData.resolve(namaFile);
         Path sementara = folderData.resolve(namaFile + ".tmp");
         Files.write(sementara, isi, StandardCharsets.UTF_8);
+        // Di Windows file bisa terkunci sesaat (dibuka Excel, antivirus, indexer): coba ulang beberapa kali.
+        for (int percobaan = 1; ; percobaan++) {
+            try {
+                pindahkan(sementara, target);
+                return;
+            } catch (FileSystemException e) {
+                if (percobaan >= MAKS_PERCOBAAN_TULIS) {
+                    Files.deleteIfExists(sementara);
+                    throw e;
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    Files.deleteIfExists(sementara);
+                    throw e;
+                }
+            }
+        }
+    }
+
+    private static void pindahkan(Path sumber, Path target) throws IOException {
         try {
-            Files.move(sementara, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            Files.move(sumber, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException e) {
-            Files.move(sementara, target, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(sumber, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 

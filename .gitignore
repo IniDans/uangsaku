@@ -4,6 +4,7 @@ out/
 # Data runtime milik pengguna (seed di data/seed/ tetap di-commit)
 data/*.csv
 data/config.properties
+data/*.tmp
 
 # File editor
 .vscode/

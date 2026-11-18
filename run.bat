@@ -1,7 +1,7 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-call build.bat
+call "%~dp0build.bat"
 if errorlevel 1 exit /b 1
-call jdk.bat
+call "%~dp0jdk.bat"
 "%JAVA%" -cp out\main Main

@@ -1,9 +1,9 @@
 @echo off
 setlocal
 cd /d "%~dp0"
-call build.bat
+call "%~dp0build.bat"
 if errorlevel 1 exit /b 1
-call jdk.bat
+call "%~dp0jdk.bat"
 
 if exist out\test rmdir /s /q out\test
 mkdir out\test
