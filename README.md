@@ -3,7 +3,46 @@
 Aplikasi desktop Java Swing untuk membantu mahasiswa rantau mengatur uang kiriman sampai kiriman berikutnya.
 Proyek mata kuliah Advanced Programming (OOP).
 
-> Status dokumen: rancangan (Tahap 1). Bagian cara menjalankan dan penjelasan OOP dilengkapi di Tahap 7.
+Tanpa database, tanpa server, tanpa API eksternal. Semua data disimpan sebagai file CSV di folder `data/`.
+
+## Cara menjalankan
+
+Kebutuhan: **JDK 17 atau lebih baru**. Tidak perlu Maven/Gradle atau library tambahan.
+
+Skrip mencari JDK di `JAVA_HOME` terlebih dahulu, lalu di JDK bawaan extension VS Code
+(`%USERPROFILE%\.vscode\extensions\oracleJdk-25`). Jika JDK Anda ada di tempat lain, set `JAVA_HOME`.
+
+| Tujuan | Windows | Git Bash / Linux / macOS |
+|---|---|---|
+| Kompilasi saja | `build.bat` | `./build.sh` |
+| Jalankan aplikasi | `run.bat` | `./run.sh` |
+| Jalankan tes otomatis | `test.bat` | `./test.sh` |
+
+Jalankan dari folder proyek (skrip akan pindah ke folder itu sendiri). Hasil kompilasi masuk ke `out/`.
+Saat pertama kali dibuka, isi `data/seed/` disalin ke `data/` dan `data/config.properties` dibuat dengan nilai default.
+
+Manual tanpa skrip:
+
+```
+javac --release 17 -encoding UTF-8 -sourcepath src/main/java -d out/main src/main/java/Main.java
+java -cp out/main Main
+```
+
+Untuk kembali ke data awal, tutup aplikasi lalu hapus `data/*.csv` dan `data/config.properties` (folder `data/seed/` jangan dihapus).
+
+## Halaman aplikasi
+
+| Halaman | Isi |
+|---|---|
+| Dashboard | Saldo, dana tersedia, sisa anggaran, budget harian/makan/hiburan, grafik pengeluaran per kategori, 5 peringatan terbaru, banner saran hemat saat anggaran menipis. |
+| Uang Kiriman | Catat kiriman baru (menambah saldo, memulai periode baru) atau koreksi kiriman aktif. Riwayat semua kiriman. |
+| Pengeluaran Tetap | Tambah/ubah/hapus biaya rutin. Opsi "kos ditanggung orang tua". |
+| Target Tabungan | Atur target dengan batas maksimal yang ditampilkan beserta rumusnya. |
+| Anggaran | Rincian perhitungan langkah demi langkah, tabel tier yang sudah dikali faktor kota, saran hemat. |
+| Transaksi Harian | Catat dan hapus pengeluaran harian. Konfirmasi bila melebihi sisa anggaran. |
+| Rekomendasi Hiburan | Tempat di kota rantau yang terjangkau sisa budget hiburan; kelola data tempat. |
+| Riwayat Peringatan | Semua peringatan beserta jumlah per jenis. |
+| Pengaturan | Profil dan kota rantau, persentase makan/hiburan, batas tier, ambang peringatan, data kota dan faktor. |
 
 ## Arsitektur
 
@@ -50,7 +89,7 @@ classDiagram
     SistemKeuangan "1" --> "*" TempatHiburan
     SistemKeuangan "1" --> "*" Peringatan
     SistemKeuangan "1" --> "*" Kota
-    SistemKeuangan ..> TierAnggaran : tentukanTier()
+    SistemKeuangan ..> TierAnggaran : TierAnggaran.tentukanTier()
     SistemKeuangan --> FileRepository
     SistemKeuangan --> AppConfig
 ```
@@ -106,3 +145,70 @@ UMK 2026 resmi yang dipakai sebagai seed: Kota Malang Rp3.736.101, Kabupaten Mal
 
 Saat pertama kali dijalankan, isi `data/seed/` disalin ke `data/`. Semua seed adalah **data dummy – pengalaman pribadi**, bukan hasil survei:
 profil mahasiswa, kiriman Rp2.000.000 (01/11/2026–01/12/2026), pengeluaran tetap (kos, kuota, bensin, servis), target tabungan Rp200.000, contoh transaksi, dan contoh tempat hiburan dengan biaya estimasi.
+
+## Empat pilar OOP di kode
+
+| Pilar | Di mana | Penjelasan singkat |
+|---|---|---|
+| **Encapsulation** | `model/Pengeluaran.java:12-16`, `model/Dompet.java:13-31` | Atribut `private`; perubahan hanya lewat method yang memvalidasi. Saldo tidak bisa di-set langsung, hanya `tambahSaldo()`/`kurangiSaldo()`, dan `kurangiSaldo()` menolak saldo negatif. Daftar data di `service/SistemKeuangan.java:51-57` juga `private`; panel hanya menerima salinan baca. |
+| **Inheritance** | `model/PengeluaranTetap.java:9`, `model/PengeluaranHarian.java:6` | Keduanya `extends Pengeluaran` dan memakai ulang id, nama, nominal, kategori, serta validasinya. Di GUI, semua halaman `extends BasePanel` (contoh `view/DashboardPanel.java:23`) dan mewarisi header, `jalankan()`, serta dialog. |
+| **Polymorphism** | `model/PengeluaranTetap.java:23-29`, `model/PengeluaranHarian.java:17-20`, `service/SistemKeuangan.java:161-167` | `hitungBiaya()` di-override: pengeluaran tetap kategori Kos bernilai 0 bila ditanggung orang tua, pengeluaran harian selalu penuh. `hitungTotalBiaya(List<? extends Pengeluaran>)` memanggil `hitungBiaya()` tanpa tahu jenis aslinya. Di GUI, `DashboardFrame` memanggil `muatUlang()` pada setiap `BasePanel`. |
+| **Abstraction** | `model/Pengeluaran.java:10,29,32`, `view/BasePanel.java:55` | `Pengeluaran` adalah kelas abstract dengan method abstract `hitungBiaya()` dan `getJenis()`; tidak bisa dibuat objeknya langsung. `BasePanel.muatUlang()` abstract: setiap halaman wajib menentukan cara menampilkan datanya. GUI hanya memanggil method `SistemKeuangan` tanpa tahu cara data disimpan ke CSV. |
+
+Relasi lain: **komposisi** `Transaksi` memiliki satu `PengeluaranHarian` (`model/Transaksi.java:16`); **agregasi** `Mahasiswa` merujuk `Kota` dan `Kiriman` aktif.
+
+## Mengganti data dummy dengan data Anda
+
+Cara termudah: lewat aplikasi. Ubah nama dan kota di **Pengaturan**, catat kiriman di **Uang Kiriman**, isi biaya rutin di **Pengeluaran Tetap**, lalu hapus transaksi contoh di **Transaksi Harian**. Semua perubahan langsung tersimpan.
+
+Atau edit CSV saat aplikasi tertutup (delimiter `;`, baris pertama header, tanggal `yyyy-MM-dd`, nominal tanpa titik):
+
+| File | Kolom |
+|---|---|
+| `mahasiswa.csv` | `idMahasiswa;namaMahasiswa;statusKosDitanggung;namaKota` |
+| `dompet.csv` | `idDompet;saldo` |
+| `kiriman.csv` | `idKiriman;nominal;tanggalTerima;tanggalBerikutnya` |
+| `pengeluaran_tetap.csv` | `idPengeluaran;namaPengeluaran;kategori;nominal` |
+| `tabungan.csv` | `nominalTabungan` |
+| `transaksi.csv` | `idTransaksi;tanggal;kategori;keterangan;nominal` (kategori: Makan, Jajan, Transportasi, Hiburan, Lainnya) |
+| `tempat_hiburan.csv` | `namaTempat;lokasi;kota;biayaMinimum;biayaMaksimum;tier` (tier: Hemat, Sedang, Lumayan, Nyaman) |
+| `kota.csv` | `namaKota;umk;persenKenaikanHarga` |
+
+Bila mengedit file langsung, pastikan `dompet.csv` sesuai (total kiriman − total transaksi), karena saldo disimpan, bukan dihitung ulang dari riwayat.
+Untuk mengubah data awal bagi pengguna baru, edit file di `data/seed/` dengan format yang sama.
+
+## Menambah kota baru
+
+Di **Pengaturan → Kota dan faktor biaya hidup**: isi nama kota dan UMK, lalu salah satu:
+
+- isi **Kenaikan harga (%)** sesuai pengalaman (misal 10 → harga 10% lebih mahal dari Malang, faktor 1,10), atau
+- kosongkan agar faktor dihitung dari UMK ÷ UMK Malang.
+
+Setelah itu pilih kota tersebut di **Profil** dan tambahkan tempat hiburannya di **Rekomendasi Hiburan**. Batas tier langsung ikut dikali faktor kota.
+
+## Pengujian
+
+### Otomatis (`test.bat` / `test.sh`)
+
+Tes ditulis tanpa JUnit (`src/test/java`) agar tidak butuh library. Tanggal "hari ini" dipatok ke 18 November 2026 lewat `Clock`, dan setiap kasus memakai folder sementara.
+
+- `LogikaAnggaranTest`: rumus dana tersedia, budget harian, 70/30, kos ditanggung (polymorphism), target tabungan melebihi batas, transaksi dan saldo, hapus transaksi mengembalikan saldo, transaksi di luar periode, tier dan faktor kota (Malang, Surabaya persen/UMK), peringatan tidak ganda, validasi input.
+- `RepositoryTest`: salin seed, simpan lalu muat ulang (round-trip), baris CSV rusak dilewati, `config.properties` rusak kembali ke default.
+
+Hasil terakhir: **24 kasus, 165 assertion lulus, 0 gagal**.
+
+### Pemeriksaan GUI yang sudah dilakukan
+
+- Kesembilan halaman dibuka lewat tombol sidebar dari data seed baru, tanpa exception, dan tampilannya diperiksa.
+- Aksi tambah transaksi lewat form: baris baru masuk `transaksi.csv` dan saldo berkurang sesuai nominal.
+- `run.bat` dari salinan bersih: kompilasi, salin seed, dan jendela terbuka tanpa error.
+
+### Checklist manual yang disarankan sebelum demo
+
+- [ ] Tambah transaksi melebihi sisa anggaran: muncul konfirmasi; jika dibatalkan, tidak tercatat.
+- [ ] Hapus transaksi: saldo kembali.
+- [ ] Centang "kos ditanggung orang tua": dana tersedia naik sebesar biaya kos.
+- [ ] Target tabungan di atas batas: ditolak dengan pesan.
+- [ ] Ganti kota ke Surabaya: faktor dan batas tier berubah, rekomendasi hiburan mengikuti kota.
+- [ ] Input salah (huruf di nominal, tanggal 31/02/2026): muncul pesan, isian tidak terhapus.
+- [ ] Tutup lalu buka lagi aplikasi: semua data masih ada.
