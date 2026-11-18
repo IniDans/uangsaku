@@ -8,6 +8,9 @@ public class TestRunner {
         System.out.println("== Uji logika anggaran (SistemKeuangan) ==");
         LogikaAnggaranTest.jalankan();
         System.out.println();
+        System.out.println("== Uji penyimpanan file (FileRepository) ==");
+        RepositoryTest.jalankan();
+        System.out.println();
         System.out.println("Hasil: " + Uji.lulus + " assertion lulus, " + Uji.gagal + " gagal.");
         System.exit(Uji.gagal == 0 ? 0 : 1);
     }

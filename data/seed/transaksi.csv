@@ -1,0 +1,13 @@
+idTransaksi;tanggal;kategori;keterangan;nominal
+TRX-001;2026-11-01;Makan;Nasi pecel;12000
+TRX-002;2026-11-02;Makan;Ayam geprek;15000
+TRX-003;2026-11-03;Jajan;Es teh & gorengan;8000
+TRX-004;2026-11-04;Transportasi;Parkir kampus;2000
+TRX-005;2026-11-05;Makan;Warteg;13000
+TRX-006;2026-11-07;Hiburan;Nonton bioskop;45000
+TRX-007;2026-11-08;Makan;Bakso;15000
+TRX-008;2026-11-10;Lainnya;Fotokopi tugas;10000
+TRX-009;2026-11-12;Jajan;Kopi susu;18000
+TRX-010;2026-11-14;Hiburan;Ngopi di kafe;35000
+TRX-011;2026-11-15;Makan;Nasi padang;20000
+TRX-012;2026-11-17;Transportasi;Ojek online;15000
