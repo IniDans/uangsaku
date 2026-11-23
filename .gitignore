@@ -1,5 +1,6 @@
-# Hasil kompilasi
+# Hasil kompilasi dan paket .exe
 out/
+dist/
 
 # Data runtime milik pengguna (seed di data/seed/ tetap di-commit)
 data/*.csv

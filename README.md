@@ -17,6 +17,12 @@ Skrip mencari JDK di `JAVA_HOME` terlebih dahulu, lalu di JDK bawaan extension V
 | Kompilasi saja | `build.bat` | `./build.sh` |
 | Jalankan aplikasi | `run.bat` | `./run.sh` |
 | Jalankan tes otomatis | `test.bat` | `./test.sh` |
+| Buat aplikasi `.exe` | `package.bat` | - |
+
+`package.bat` memakai `jpackage` dari JDK dan menghasilkan `dist\UangSaku\UangSaku.exe`.
+Folder `dist\UangSaku` sudah membawa Java runtime sendiri, jadi bisa disalin ke komputer lain
+tanpa memasang Java. Pindahkan satu folder utuh, jangan hanya file `.exe`-nya.
+Data pengguna tersimpan di `dist\UangSaku\data\`.
 
 Jalankan dari folder proyek (skrip akan pindah ke folder itu sendiri). Hasil kompilasi masuk ke `out/`.
 Saat pertama kali dibuka, isi `data/seed/` disalin ke `data/` dan `data/config.properties` dibuat dengan nilai default.
